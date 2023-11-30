@@ -1,3 +1,4 @@
+
 import java.util.Scanner;
 import java.util.TreeMap;
 
@@ -7,11 +8,15 @@ public class Main {
         System.out.print("Введите выражение: ");
         String expression = scanner.nextLine();
 
-        String result = calc(expression);
-        System.out.println(result);
+        try {
+            String result = calc(expression);
+            System.out.println(result);
+        } catch (Exception e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
     }
 
-    public static String calc(String input) {
+    public static String calc(String input) throws Exception {
         Converter converter = new Converter();
         String[] actions = {"+", "-", "*", "/"};
         String[] regActions = {"\\+", "-", "\\*", "/"};
@@ -24,17 +29,16 @@ public class Main {
             }
         }
 
-
         if (actionInd == -1){
-            return "Неподдерживаемая операция";
+            throw new Exception("Неподдерживаемая операция");
         }
 
         String[] data = input.split(regActions[actionInd]);
 
         if (data.length > 2){
-            return "Не вводите больше двух чисел!!";
-
+            throw new IllegalArgumentException("Не вводите больше двух чисел!!");
         }
+
         if (converter.isRoman(data[0]) == converter.isRoman(data[1])){
             int a, b;
             boolean isRoman = converter.isRoman(data[0]);
@@ -46,11 +50,11 @@ public class Main {
                 b = Integer.parseInt(data[1]);
             }
 
-            if ((a <= 1 || a >= 10 || b <= 1 || b >= 10) ){
+            if ((a <= 0 || a >= 10 || b <= 0 || b >= 10) ){
                 if (isRoman){
-                    return "Вводите числа от I до X!";
+                    throw new Exception("Вводите числа от I до X!");
                 } else {
-                    return "Вводите числа от 1 до 10!";
+                    throw new Exception("Вводите числа от 1 до 10!");
                 }
             }
 
@@ -66,19 +70,17 @@ public class Main {
                     result = a * b;
                     break;
                 case "/":
-                    if (b == 0){
-                        return "Ошибка: деление на ноль";
-                    }
                     result = a / b;
                     break;
-                default:
             }
+
             if (isRoman && result < 0){
-                return "Результат римских чисел дольжен быть положительным!!";
+                throw new Exception("Результат римских чисел должен быть положительным!!");
             }
+
             return isRoman ? converter.intToRoman(result) : String.valueOf(result);
         } else {
-            return "Вводите числа в одном формате";
+            throw new Exception("Вводите числа в одном формате");
         }
     }
 
@@ -114,9 +116,15 @@ public class Main {
 
 
         public boolean isRoman(String number) {
-            return romanKeyMap.containsKey(number.charAt(0));
+            for (char c : number.toCharArray()) {
+                if (!romanKeyMap.containsKey(c)) {
+                    return false; // Если хоть один символ не является римской цифрой, возвращаем false
+                }
+            }
+            return true; // Если все символы являются римскими цифрами, возвращаем true
         }
 
+        //15
         public String intToRoman(int number) {
             String roman = "";
             int arabianKey;
@@ -129,27 +137,28 @@ public class Main {
 
 
         }
-
-
-        public int romanToInt(String s) {
+        //XV
+        public int romanToInt(String s) throws Exception {
             int end = s.length() - 1;
             char[] arr = s.toCharArray();
             int arabian;
-            int result = romanKeyMap.get(arr[end]);
-            for (int i = end - 1; i >= 0; i--) {
+            int result = 0;
+            int prevValue = 0;
+
+            for (int i = end; i >= 0; i--) {
                 arabian = romanKeyMap.get(arr[i]);
 
-                if (arabian < romanKeyMap.get(arr[i + 1])) {
+                if (arabian < prevValue) {
                     result -= arabian;
                 } else {
                     result += arabian;
                 }
 
-
+                prevValue = arabian;
             }
             return result;
-
         }
+
 
     }
 }
